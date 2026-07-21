@@ -138,7 +138,7 @@ button:hover {
 @media (max-width: 768px) {
 
   body {
-    background: url('/images/mobile-background.jpg') no-repeat center center;
+    background: url('/images/mobilebg.png') no-repeat center center;
     background-size: cover;
     background-attachment: scroll;
     padding: 20px;
