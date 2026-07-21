@@ -6,6 +6,7 @@ const nodemailer = require('nodemailer');
 const cron = require('node-cron');
 const { v4: uuidv4 } = require('uuid');
 const { Pool } = require('pg');
+const session = require('express-session');
 
 const app = express();
 
@@ -13,8 +14,18 @@ const app = express();
 // -------------------- MIDDLEWARE --------------------
 
 app.set('view engine', 'ejs');
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'commune-cafe-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 8
+  }
+}));
 
 
 // -------------------- POSTGRES CONNECTION --------------------
@@ -143,60 +154,36 @@ app.post('/register', async (req, res) => {
       `
     );
 
-
     const template = templateResult.rows[0];
-
 
     if (!template) {
       return res.send("❌ Email template not found");
     }
 
-
-
     const subject = template.confirmation_subject;
-
-
     const body = template.confirmation_body
       .replace('<%= name %>', name)
       .replace('<%= date %>', event.date)
       .replace('<%= place %>', event.place);
-
-
 
     sendEmail(
       email,
       subject,
       body
     );
-
-
     res.render('thankyou', { name });
 
-
-
   } catch (err) {
-
-
     console.error("Registration error:", err);
-
     res.send("❌ Error saving registration");
-
-
   }
-
 });
-
-
 
 // -------------------- CRON REMINDER EMAIL --------------------
 
-
 cron.schedule('0 9 * * *', async () => {
 
-
   try {
-
-
     const eventResult = await pool.query(
       `
       SELECT *
@@ -204,35 +191,21 @@ cron.schedule('0 9 * * *', async () => {
       LIMIT 1
       `
     );
-
-
     const event = eventResult.rows[0];
-
-
     if (!event) return;
-
-
-
     const eventDate = new Date(event.date);
     const now = new Date();
-
-
     const diffDays =
       (eventDate - now) /
       (1000 * 60 * 60 * 24);
 
-
-
     if (diffDays <= 1 && diffDays > 0) {
-
-
       const registrationsResult = await pool.query(
         `
         SELECT participants_name, participants_email
         FROM registrations
         `
       );
-
 
       const templateResult = await pool.query(
         `
@@ -242,14 +215,8 @@ cron.schedule('0 9 * * *', async () => {
         `
       );
 
-
       const template = templateResult.rows[0];
-
-
       if (!template) return;
-
-
-
       registrationsResult.rows.forEach(r => {
 
 
@@ -291,19 +258,12 @@ cron.schedule('0 9 * * *', async () => {
 
 // -------------------- EMAIL FUNCTION --------------------
 
-
 const transporter = nodemailer.createTransport({
-
   service: 'gmail',
-
   auth: {
-
     user: process.env.EMAIL_USER,
-
     pass: process.env.EMAIL_PASSWORD
-
   }
-
 });
 
 function sendEmail(to, subject, text) {
@@ -314,17 +274,19 @@ function sendEmail(to, subject, text) {
     text,
     html: `<p>${text.replace(/\n/g, '<br>')}</p>`
   };
-
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       return console.log("❌ Email error:", error);
     }
     console.log("📧 Email sent:", info.response);
-
-
   });
+}
 
-
+function isAuthenticated(req, res, next) {
+  if (req.session.admin) {
+    return next();
+  }
+  res.redirect('/admin');
 }
 
 // -------------------- ADMIN CMS --------------------
@@ -352,7 +314,13 @@ app.post('/admin/login', async (req, res) => {
       });
     }
 
-    res.redirect('/admin/dashboard');
+    // Save login session
+		req.session.admin = {
+		id: admin.id,
+		username: admin.username,
+		role: admin.role
+		};
+		res.redirect('/admin/dashboard');
 
   } catch (err) {
     console.error("Admin login error:", err);
@@ -361,12 +329,14 @@ app.post('/admin/login', async (req, res) => {
 });
 
 // Dashboard
-app.get('/admin/dashboard', (req, res) => {
-  res.render('admin_dashboard');
+app.get('/admin/dashboard', isAuthenticated, (req, res) => {
+  res.render('admin_dashboard', {
+    admin: req.session.admin
+  });
 });
 
 // Event settings
-app.get('/admin/event-settings', async (req, res) => {
+app.get('/admin/event-settings', isAuthenticated, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT * FROM event_settings LIMIT 1`
@@ -382,7 +352,7 @@ app.get('/admin/event-settings', async (req, res) => {
   }
 });
 
-app.post('/admin/event-settings', async (req, res) => {
+app.post('/admin/event-settings', isAuthenticated, async (req, res) => {
   const { date, place, start_time, end_time } = req.body;
 
   console.log("FORM DATA:");
@@ -428,7 +398,7 @@ const formattedDate =
 });
 
 // Welcome message
-app.get('/admin/welcome-message', async (req, res) => {
+app.get('/admin/welcome-message', isAuthenticated, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT * FROM welcome_message LIMIT 1`
@@ -444,7 +414,7 @@ app.get('/admin/welcome-message', async (req, res) => {
   }
 });
 
-app.post('/admin/welcome-message', async (req, res) => {
+app.post('/admin/welcome-message', isAuthenticated, async (req, res) => {
   const { message } = req.body;
 
   try {
@@ -468,7 +438,7 @@ app.post('/admin/welcome-message', async (req, res) => {
 });
 
 // Email templates
-app.get('/admin/email-templates', async (req, res) => {
+app.get('/admin/email-templates', isAuthenticated, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT * FROM email_templates LIMIT 1`
@@ -484,7 +454,7 @@ app.get('/admin/email-templates', async (req, res) => {
   }
 });
 
-app.post('/admin/email-templates', async (req, res) => {
+app.post('/admin/email-templates', isAuthenticated, async (req, res) => {
   const {
     confirmation_subject,
     confirmation_body,
@@ -525,7 +495,7 @@ app.post('/admin/email-templates', async (req, res) => {
 });
 
 // Manage admins
-app.get('/admin/manage-admins', async (req, res) => {
+app.get('/admin/manage-admins', isAuthenticated, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT * FROM admins`
@@ -541,7 +511,7 @@ app.get('/admin/manage-admins', async (req, res) => {
   }
 });
 
-app.post('/admin/manage-admins', async (req, res) => {
+app.post('/admin/manage-admins', isAuthenticated, async (req, res) => {
   const { name, username, password, role } = req.body;
   const id = uuidv4();
 
@@ -575,7 +545,7 @@ app.post('/admin/manage-admins', async (req, res) => {
   }
 });
 
-app.post('/admin/delete-admin/:id', async (req, res) => {
+app.post('/admin/delete-admin/:id', isAuthenticated, async (req, res) => {
   const id = req.params.id;
 
   try {
@@ -594,6 +564,17 @@ app.post('/admin/delete-admin/:id', async (req, res) => {
     console.error(err);
     res.send("❌ Error deleting admin");
   }
+});
+
+app.get('/admin/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      console.error(err);
+      return res.redirect('/admin/dashboard');
+    }
+
+    res.redirect('/admin');
+  });
 });
 
 // -------------------- START SERVER --------------------

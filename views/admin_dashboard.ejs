@@ -7,13 +7,25 @@
 <body>
   <div class="form-box">
     <h2>Admin Dashboard</h2>
+
+    <p><strong>Welcome, <%= admin.username %></strong></p>
+    <p>Role: <%= admin.role %></p>
+
+    <hr>
+
     <ul>
       <li><a href="/admin/event-settings">Manage Event Settings</a></li>
       <li><a href="/admin/welcome-message">Manage Welcome Message</a></li>
       <li><a href="/admin/email-templates">Manage Email Templates</a></li>
-      <li><a href="/admin/manage-admins">Manage Admins</a></li>
+
+      <% if (admin.role === 'superadmin') { %>
+        <li><a href="/admin/manage-admins">Manage Admins</a></li>
+      <% } %>
+
     </ul>
+
     <a href="/" class="back-button">⬅ Back to Main Page</a>
+    <a href="/admin/logout" class="back-button">Logout</a>
   </div>
 </body>
 </html>
