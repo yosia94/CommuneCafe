@@ -131,6 +131,14 @@ button:hover {
   color: #000; /* darker for emphasis */
 }
 
+.success-message {
+    font-size: 22px;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.5;
+    margin-top: 20px;
+}
+
 /* ===========================
    Mobile Responsive
 =========================== */
