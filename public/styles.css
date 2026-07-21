@@ -138,42 +138,42 @@ button:hover {
 @media (max-width: 768px) {
 
   body {
-    background: url('/images/mobilebg.png') no-repeat center center;
+    background: url('/images/mobilebg.png') no-repeat center top;
     background-size: cover;
     background-attachment: scroll;
-    padding: 20px;
-  }
-
-  .logo {
-    width: 140px;
-  }
-
-  h2 {
-    font-size: 24px;
+    display: block;
+    min-height: 100vh;
+    padding: 30px 15px;
   }
 
   .form-box {
-    width: 100%;
-    max-width: 100%;
-    padding: 20px;
-    border-radius: 12px;
+    width: 120%;
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 28px;
+    border-radius: 15px;
+  }
+
+  .logo {
+    width: 170px;
+    display: block;
+    margin: 20px auto;
+  }
+
+  h2 {
+    font-size: 28px;
   }
 
   input[type="text"],
   input[type="email"],
   input[type="time"] {
-    padding: 12px;
-    font-size: 16px;
+    padding: 14px;
+    font-size: 17px;
   }
 
   button {
-    padding: 14px;
-    font-size: 16px;
-  }
-
-  .back-button {
-    display: block;
-    text-align: center;
+    padding: 16px;
+    font-size: 17px;
   }
 
 }
