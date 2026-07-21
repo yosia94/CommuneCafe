@@ -147,12 +147,12 @@ button:hover {
   }
 
   .form-box {
-    width: 120%;
-    max-width: 500px;
-    margin: 40px auto;
-    padding: 28px;
-    border-radius: 15px;
-  }
+  width: 92%;
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 28px;
+  border-radius: 12px;
+}
 
   .logo {
     width: 170px;
