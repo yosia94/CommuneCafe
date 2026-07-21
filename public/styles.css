@@ -41,6 +41,12 @@ h2 {
   color: #4e342e;   /* ✅ dark brown for readability */
 }
 
+.form-box p {
+    font-size: 18px;
+    line-height: 1.6;
+    text-align: center;
+}
+
 /* Form elements */
 label {
   display: block;
