@@ -131,6 +131,51 @@ button:hover {
   color: #000; /* darker for emphasis */
 }
 
+/* ===========================
+   Mobile Responsive
+=========================== */
 
+@media (max-width: 768px) {
+
+  body {
+    background: url('/images/mobile-background.jpg') no-repeat center center;
+    background-size: cover;
+    background-attachment: scroll;
+    padding: 20px;
+  }
+
+  .logo {
+    width: 140px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  .form-box {
+    width: 100%;
+    max-width: 100%;
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="time"] {
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  button {
+    padding: 14px;
+    font-size: 16px;
+  }
+
+  .back-button {
+    display: block;
+    text-align: center;
+  }
+
+}
 
 
