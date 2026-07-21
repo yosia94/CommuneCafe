@@ -147,12 +147,20 @@ button:hover {
   }
 
   .form-box {
-  width: 92%;
-  max-width: 500px;
-  margin: 40px auto;
-  padding: 28px;
-  border-radius: 12px;
-}
+    width: 92%;
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 28px;
+    border-radius: 12px;
+
+    /* Glass effect */
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    /* Optional: make it cleaner */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
 
   .logo {
     width: 170px;
