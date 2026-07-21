@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Manage Admins - Commune Cafe</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="form-box">
+    <h2>Manage Admins</h2>
+    <form action="/admin/manage-admins" method="post">
+      <label>Name</label>
+      <input type="text" name="name" required>
+
+      <label>Username</label>
+      <input type="text" name="username" required>
+
+      <label>Password</label>
+      <input type="password" name="password" required>
+
+      <label>Role</label>
+      <select name="role">
+        <option value="admin">Admin</option>
+        <option value="superadmin">Super Admin</option>
+      </select>
+
+      <button type="submit">Add Admin</button>
+    </form>
+
+    <h3>Existing Admins</h3>
+    <ul>
+      <% admins.forEach(a => { %>
+        <li><%= a.name %> (<%= a.role %>) 
+          <% if (a.role !== 'superadmin') { %>
+            <form action="/admin/delete-admin/<%= a.id %>" method="post" style="display:inline;">
+              <button type="submit">Delete</button>
+            </form>
+          <% } %>
+        </li>
+      <% }) %>
+    </ul>
+
+    <a href="/admin/dashboard" class="back-button">⬅ Back to Dashboard</a>
+    <a href="/" class="back-button">⬅ Back to Main Page</a>
+  </div>
+</body>
+</html>

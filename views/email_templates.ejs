@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Email Templates - Commune Cafe</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="form-box">
+    <h2>Email Templates</h2>
+    <form action="/admin/email-templates" method="post">
+      <label>Confirmation Subject</label>
+      <input type="text" name="confirmation_subject" value="<%= template ? template.confirmation_subject : '' %>">
+
+      <label>Confirmation Body</label>
+      <textarea name="confirmation_body"><%= template ? template.confirmation_body : '' %></textarea>
+
+      <label>Reminder Subject</label>
+      <input type="text" name="reminder_subject" value="<%= template ? template.reminder_subject : '' %>">
+
+      <label>Reminder Body</label>
+      <textarea name="reminder_body"><%= template ? template.reminder_body : '' %></textarea>
+
+      <button type="submit">Save</button>
+    </form>
+    <a href="/admin/dashboard" class="back-button">⬅ Back to Dashboard</a>
+    <a href="/" class="back-button">⬅ Back to Main Page</a>
+  </div>
+</body>
+</html>

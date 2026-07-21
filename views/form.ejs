@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Commune Cafe Event Registration</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="form-box">
+    <h2>Commune Cafe Event Registration</h2>
+
+    <!-- ✅ Show welcome message with HTML support -->
+<% if (welcome && welcome.message) { %>
+  <div class="welcome-text">
+    <%- welcome.message %>
+  </div>
+<% } %>
+
+
+    <form id="registrationForm" action="/register" method="post" novalidate>
+      <label>Name <span class="required">*</span></label>
+      <input type="text" name="name" required>
+      <div class="error-message" id="error-name"></div>
+
+      <label>Email <span class="required">*</span></label>
+      <input type="email" name="email" required>
+      <div class="error-message" id="error-email"></div>
+	  
+	  <label>Whatsapp No <span class="required">*</span></label>
+      <input type="text" name="whatsapp" required>
+      <div class="error-message" id="error-whatsapp"></div>
+
+      <label>Dari mana anda tahu Commune Cafe? <span class="required">*</span></label>
+      <div class="radio-group">
+        <label><input type="radio" name="source" value="instagram" required> Instagram</label>
+        <label><input type="radio" name="source" value="thread"> Thread</label>
+        <label><input type="radio" name="source" value="teman"> Teman</label>
+      </div>
+      <div class="error-message" id="error-source"></div>
+
+      <label>Apakah anda tertarik mengikuti sesi Counselling Corner? <span class="required">*</span></label>
+      <div class="radio-group">
+        <label><input type="radio" name="counselling" value="ya" required> Ya</label>
+        <label><input type="radio" name="counselling" value="tidak"> Tidak</label>
+      </div>
+      <div class="error-message" id="error-counselling"></div>
+      <p class="note">Jika ya, mohon kontak nomor admin untuk booking sesi</p>
+
+      <label>Instagram:</label>
+      <input type="text" name="instagram">
+
+      <label>Estimate Time Arrival:</label>
+      <input type="time" name="eta">
+
+      <button type="submit">Register</button>
+    </form>
+
+    <a href="/" class="back-button">⬅ Back to Main Page</a>
+  </div>
+
+  <!-- ✅ Validation + Confirm popup script -->
+  <script>
+    const form = document.getElementById('registrationForm');
+
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      // Clear old errors
+      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+
+      let valid = true;
+
+      if (!form.name.value.trim()) {
+        document.getElementById('error-name').textContent = 'Name is required';
+        valid = false;
+      }
+      if (!form.email.value.trim()) {
+        document.getElementById('error-email').textContent = 'Email is required';
+        valid = false;
+      }
+	  if (!form.whatsapp.value.trim()) {
+		document.getElementById('error-whatsapp').textContent = 'WhatsApp number is required';
+		valid = false;
+	  }
+      if (!form.source.value) {
+        document.getElementById('error-source').textContent = 'Please select a source';
+        valid = false;
+      }
+      if (!form.counselling.value) {
+        document.getElementById('error-counselling').textContent = 'Please select counselling option';
+        valid = false;
+      }
+
+      if (valid) {
+        const confirmed = confirm("Apakah anda yakin data sudah benar?");
+        if (confirmed) {
+          form.submit();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

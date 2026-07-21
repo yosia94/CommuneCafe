@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Event Settings - Commune Cafe</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="form-box">
+    <h2>Event Settings</h2>
+    <form action="/admin/event-settings" method="post">
+      <label>Date <span class="required">*</span></label>
+      <input type="text" name="date" value="<%= event ? event.date : '' %>" required>
+
+      <label>Place <span class="required">*</span></label>
+      <input type="text" name="place" value="<%= event ? event.place : '' %>" required>
+
+      <label>Start Time</label>
+      <input type="text" name="start_time" value="<%= event ? event.start_time : '' %>">
+
+      <label>End Time</label>
+      <input type="text" name="end_time" value="<%= event ? event.end_time : '' %>">
+
+      <button type="submit">Save</button>
+    </form>
+    <a href="/admin/dashboard" class="back-button">⬅ Back to Dashboard</a>
+    <a href="/" class="back-button">⬅ Back to Main Page</a>
+  </div>
+</body>
+</html>

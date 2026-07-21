@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Welcome Message - Commune Cafe</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="form-box">
+    <h2>Welcome Message</h2>
+    <form action="/admin/welcome-message" method="post">
+  <label>Message <span class="required">*</span></label>
+  <textarea name="message" rows="8" required><%= welcome ? welcome.message : '' %></textarea>
+  <p class="note">You can use HTML tags like &lt;b&gt;bold&lt;/b&gt; or &lt;i&gt;italic&lt;/i&gt; for formatting.</p>
+  <button type="submit">Save</button>
+</form>
+
+    <a href="/admin/dashboard" class="back-button">⬅ Back to Dashboard</a>
+    <a href="/" class="back-button">⬅ Back to Main Page</a>
+  </div>
+</body>
+</html>

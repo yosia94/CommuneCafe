@@ -1,0 +1,4 @@
+node_modules/
+.env
+commune_cafe.db
+server(old).js

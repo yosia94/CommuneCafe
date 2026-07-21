@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login - Commune Cafe</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="form-box">
+    <h2>Admin Login</h2>
+    <form action="/admin/login" method="post">
+      <label>Username <span class="required">*</span></label>
+      <input type="text" name="username" required>
+      <div class="error-message"><%= error ? error : '' %></div>
+
+      <label>Password <span class="required">*</span></label>
+      <input type="password" name="password" required>
+
+      <button type="submit">Login</button>
+    </form>
+    <a href="/" class="back-button">⬅ Back to Main Page</a>
+  </div>
+</body>
+</html>
