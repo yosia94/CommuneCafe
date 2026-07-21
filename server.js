@@ -134,16 +134,10 @@ app.post('/register', async (req, res) => {
       LIMIT 1
       `
     );
-
-
     const event = eventResult.rows[0];
-
-
     if (!event) {
       return res.send("❌ Event settings not found");
     }
-
-
 
     // Get email template
     const templateResult = await pool.query(
@@ -155,24 +149,20 @@ app.post('/register', async (req, res) => {
     );
 
     const template = templateResult.rows[0];
-
     if (!template) {
       return res.send("❌ Email template not found");
     }
-
     const subject = template.confirmation_subject;
     const body = template.confirmation_body
       .replace('<%= name %>', name)
       .replace('<%= date %>', event.date)
       .replace('<%= place %>', event.place);
-
-    sendEmail(
+    await sendEmail(
       email,
       subject,
       body
     );
     res.render('thankyou', { name });
-
   } catch (err) {
     console.error("Registration error:", err);
     res.send("❌ Error saving registration");
@@ -221,40 +211,21 @@ cron.schedule('0 9 * * *', async () => {
 
 
         const subject = template.reminder_subject;
-
-
         const body = template.reminder_body
           .replace('<%= name %>', r.participants_name)
           .replace('<%= date %>', event.date)
           .replace('<%= place %>', event.place);
-
-
-
         sendEmail(
           r.participants_email,
           subject,
           body
         );
-
-
       });
-
-
     }
-
-
   } catch (err) {
-
-
     console.error("Cron error:", err);
-
-
   }
-
-
 });
-
-
 
 // -------------------- EMAIL FUNCTION --------------------
 
@@ -266,27 +237,29 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-function sendEmail(to, subject, text) {
+transporter.verify(function(error, success) {
+  if (error) {
+    console.log("❌ SMTP connection failed:", error);
+  } else {
+    console.log("✅ SMTP server ready");
+  }
+});
+
+async function sendEmail(to, subject, text) {
   const mailOptions = {
-    from: '"Commune Cafe Events" <communecafeid23@gmail.com>',
+    from: `"Commune Cafe Events" <${process.env.EMAIL_USER}>`,
     to,
     subject,
     text,
     html: `<p>${text.replace(/\n/g, '<br>')}</p>`
   };
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      return console.log("❌ Email error:", error);
-    }
-    console.log("📧 Email sent:", info.response);
-  });
-}
+  try {
 
-function isAuthenticated(req, res, next) {
-  if (req.session.admin) {
-    return next();
+    const info = await transporter.sendMail(mailOptions);
+    console.log("📧 Email sent:", info.response);
+  } catch (error) {
+    console.log("❌ Email error:", error);
   }
-  res.redirect('/admin');
 }
 
 // -------------------- ADMIN CMS --------------------
