@@ -226,7 +226,6 @@ cron.schedule('0 9 * * *', async () => {
     console.error("Cron error:", err);
   }
 });
-
 // -------------------- EMAIL FUNCTION --------------------
 
 const transporter = nodemailer.createTransport({
@@ -237,6 +236,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// Check SMTP connection when server starts
 transporter.verify(function(error, success) {
   if (error) {
     console.log("❌ SMTP connection failed:", error);
@@ -246,24 +246,22 @@ transporter.verify(function(error, success) {
 });
 
 async function sendEmail(to, subject, text) {
+  console.log("📨 Preparing email to:", to);
   const mailOptions = {
     from: `"Commune Cafe Events" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    text,
+    to: to,
+    subject: subject,
+    text: text,
     html: `<p>${text.replace(/\n/g, '<br>')}</p>`
   };
-  try {
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log("📧 Email sent:", info.response);
-  } catch (error) {
-    console.log("❌ Email error:", error);
-  }
+  const info = await transporter.sendMail(mailOptions);
+  console.log("📧 Email sent:", info.response);
 }
 
 // Authentication middleware
 function isAuthenticated(req, res, next) {
+
   if (req.session.admin) {
     return next();
   }
