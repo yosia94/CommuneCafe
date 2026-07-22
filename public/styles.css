@@ -13,7 +13,7 @@ body {
 
 /* Landing page logo */
 .logo {
-  width: 200px;
+  width: 500px;
   animation: fadeIn 2s ease-in-out;
   cursor: pointer;
 }
@@ -209,7 +209,7 @@ textarea {
   }
 
   .logo {
-    width: 170px;
+    width: 300px;
     display: block;
     margin: 20px auto;
   }
