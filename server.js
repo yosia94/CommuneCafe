@@ -151,18 +151,12 @@ app.post('/register', async (req, res) => {
     if (!template) {
       return res.send("❌ Email template not found");
     }
-    const formattedDate = new Date(event.date).toLocaleDateString('id-ID', {
+	// Format event date nicely
+	const formattedDate = new Date(event.date).toLocaleDateString('id-ID', {
 		weekday: 'long',
 		day: 'numeric',
 		month: 'long',
 		year: 'numeric'
-	});
-	// Format event date nicely
-	const formattedDate = new Date(event.date).toLocaleDateString('id-ID', {
-	weekday: 'long',
-	day: 'numeric',
-	month: 'long',
-	year: 'numeric'
 	});
 	const subject = template.confirmation_subject;
 	const body = template.confirmation_body
