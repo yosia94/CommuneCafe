@@ -13,7 +13,7 @@ body {
 
 /* Landing page logo */
 .logo {
-  width: 750px;
+  width: 1000px;
   animation: fadeIn 2s ease-in-out;
   cursor: pointer;
 }
@@ -159,6 +159,14 @@ textarea {
   font-size: 14px;
 }
 
+.landing-text {
+    font-size: 12px;
+    color: white;
+    text-align: center;
+    width: 100%;
+    margin-top: 10px;
+}
+
 /* ===========================
    Mobile Responsive
 =========================== */
@@ -209,10 +217,11 @@ textarea {
   }
 
   .logo {
-    width: 450px;
+    width: 85%;
+    max-width: 350px;
     display: block;
     margin: 20px auto;
-  }
+}
 
   h2 {
     font-size: 28px;
@@ -229,7 +238,16 @@ textarea {
     padding: 16px;
     font-size: 17px;
   }
+  
+  .landing-text {
+    font-size: 12px;
+    color: white;
+    text-align: center;
+    width: 100%;
+    margin-top: 10px;
+	}
 
 }
+
 
 
