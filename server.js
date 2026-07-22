@@ -2,7 +2,6 @@ require('dotenv').config();
 
 const express = require('express');
 const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer');
 const cron = require('node-cron');
 const { v4: uuidv4 } = require('uuid');
 const { Pool } = require('pg');
@@ -228,48 +227,33 @@ cron.schedule('0 9 * * *', async () => {
 });
 // -------------------- EMAIL FUNCTION --------------------
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  family: 4,
-
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  },
-
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 15000
-});
-
-// Check SMTP connection when server starts
-transporter.verify(function(error, success) {
-  if (error) {
-    console.log("❌ SMTP connection failed:", error);
-  } else {
-    console.log("✅ SMTP server ready");
-  }
-});
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendEmail(to, subject, text) {
   console.log("📨 Preparing email to:", to);
-  const mailOptions = {
-    from: `"Commune Cafe Events" <${process.env.EMAIL_USER}>`,
-    to: to,
-    subject: subject,
-    text: text,
-    html: `<p>${text.replace(/\n/g, '<br>')}</p>`
-  };
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log("📧 Email sent:", info.response);
+  try {
+    const emailResult = await resend.emails.send({
+      from: 'Commune Cafe <onboarding@resend.dev>',
+      to: [to],
+      subject: subject,
+      html: `
+        <div>
+          ${text.replace(/\n/g, '<br>')}
+        </div>
+      `
+    });
+    console.log("📧 Email sent:", emailResult);
+
+  } catch (error) {
+    console.log("❌ Email error:", error);
+    throw error;
+  }
 }
 
 // Authentication middleware
 function isAuthenticated(req, res, next) {
-
   if (req.session.admin) {
     return next();
   }
