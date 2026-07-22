@@ -230,9 +230,8 @@ cron.schedule('0 9 * * *', async () => {
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-
+  port: 465,
+  secure: true,
   family: 4,
 
   auth: {
@@ -240,9 +239,9 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD
   },
 
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 15000
 });
 
 // Check SMTP connection when server starts
