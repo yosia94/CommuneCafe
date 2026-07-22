@@ -151,16 +151,29 @@ app.post('/register', async (req, res) => {
     if (!template) {
       return res.send("❌ Email template not found");
     }
-    const subject = template.confirmation_subject;
-    const body = template.confirmation_body
-      .replace('<%= name %>', name)
-      .replace('<%= date %>', event.date)
-      .replace('<%= place %>', event.place);
-    await sendEmail(
-      email,
-      subject,
-      body
-    );
+    const formattedDate = new Date(event.date).toLocaleDateString('id-ID', {
+		weekday: 'long',
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric'
+	});
+	// Format event date nicely
+	const formattedDate = new Date(event.date).toLocaleDateString('id-ID', {
+	weekday: 'long',
+	day: 'numeric',
+	month: 'long',
+	year: 'numeric'
+	});
+	const subject = template.confirmation_subject;
+	const body = template.confirmation_body
+	.replace('<%= name %>', name)
+	.replace('<%= date %>', formattedDate)
+	.replace('<%= place %>', event.place);
+	await sendEmail(
+	email,
+	subject,
+	body
+	);
     res.render('thankyou', { name });
   } catch (err) {
     console.error("Registration error:", err);
@@ -170,61 +183,90 @@ app.post('/register', async (req, res) => {
 
 // -------------------- CRON REMINDER EMAIL --------------------
 
-cron.schedule('0 9 * * *', async () => {
-
-  try {
-    const eventResult = await pool.query(
-      `
-      SELECT *
-      FROM event_settings
-      LIMIT 1
-      `
-    );
-    const event = eventResult.rows[0];
-    if (!event) return;
-    const eventDate = new Date(event.date);
-    const now = new Date();
-    const diffDays =
-      (eventDate - now) /
-      (1000 * 60 * 60 * 24);
-
-    if (diffDays <= 1 && diffDays > 0) {
-      const registrationsResult = await pool.query(
-        `
-        SELECT participants_name, participants_email
-        FROM registrations
-        `
-      );
-
-      const templateResult = await pool.query(
-        `
+cron.schedule(
+  '0 9 * * *',
+  async () => {
+    try {
+      // Get event settings
+      const eventResult = await pool.query(`
         SELECT *
-        FROM email_templates
+        FROM event_settings
         LIMIT 1
-        `
-      );
+      `);
 
-      const template = templateResult.rows[0];
-      if (!template) return;
-      registrationsResult.rows.forEach(r => {
+      const event = eventResult.rows[0];
+      if (!event) {
+        console.log("❌ Event settings not found");
+        return;
+      }
+      const eventDate = new Date(event.date);
 
+      // Tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const subject = template.reminder_subject;
-        const body = template.reminder_body
-          .replace('<%= name %>', r.participants_name)
-          .replace('<%= date %>', event.date)
-          .replace('<%= place %>', event.place);
-        sendEmail(
-          r.participants_email,
-          subject,
-          body
-        );
-      });
+      // Is event tomorrow?
+      if (
+        eventDate.getFullYear() === tomorrow.getFullYear() &&
+        eventDate.getMonth() === tomorrow.getMonth() &&
+        eventDate.getDate() === tomorrow.getDate()
+      ) {
+        console.log("📅 Event is tomorrow. Sending reminder emails...");
+
+        // Format date nicely
+        const formattedDate = eventDate.toLocaleDateString('id-ID', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+
+        // Get all registrants
+        const registrationsResult = await pool.query(`
+          SELECT participants_name, participants_email
+          FROM registrations
+        `);
+
+        // Get reminder template
+        const templateResult = await pool.query(`
+          SELECT *
+          FROM email_templates
+          LIMIT 1
+        `);
+
+        const template = templateResult.rows[0];
+        if (!template) {
+          console.log("❌ Reminder template not found");
+          return;
+        }
+
+        // Send reminder email
+        for (const r of registrationsResult.rows) {
+          const subject = template.reminder_subject;
+          const body = template.reminder_body
+            .replace('<%= name %>', r.participants_name)
+            .replace('<%= date %>', formattedDate)
+            .replace('<%= place %>', event.place);
+          await sendEmail(
+            r.participants_email,
+            subject,
+            body
+          );
+          console.log(`✅ Reminder sent to ${r.participants_email}`);
+        }
+        console.log("🎉 All reminder emails have been sent.");
+      } else {
+        console.log("📅 No reminder today.");
+      }
+    } catch (err) {
+      console.error("❌ Cron error:", err);
     }
-  } catch (err) {
-    console.error("Cron error:", err);
+  },
+  {
+    timezone: 'Asia/Jakarta'
   }
-});
+);
+
 // -------------------- EMAIL FUNCTION --------------------
 
 const { Resend } = require('resend');
