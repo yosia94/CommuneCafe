@@ -36,7 +36,7 @@ const pool = new Pool({
   }
 });
 
-pool.connect()
+pool.query("SELECT 1")
   .then(() => console.log("✅ Connected to PostgreSQL"))
   .catch(err => console.error("❌ PostgreSQL connection error:", err));
 
@@ -49,27 +49,27 @@ app.get('/', (req, res) => {
   res.render('index');
 });
 
-
 // Registration form
 app.get('/register', async (req, res) => {
-
   try {
-
-    const result = await pool.query(
+    const welcomeResult = await pool.query(
       `SELECT * FROM welcome_message LIMIT 1`
     );
-
-    const welcome = result.rows[0];
-
-    res.render('form', { welcome });
-
+    const confirmationResult = await pool.query(
+      `SELECT setting_value FROM admin_settings LIMIT 1`
+    );
+    const welcome = welcomeResult.rows[0];
+    const confirmationInstruction = confirmationResult.rows[0]
+      ? confirmationResult.rows[0].setting_value
+      : "Please type your confirmation";
+    res.render('form', { 
+      welcome,
+      confirmationInstruction
+    });
   } catch (err) {
-
     console.error("Register page error:", err);
-    res.send("❌ Error loading registration form");
-
+    res.send(err.message);
   }
-
 });
 
 
@@ -604,6 +604,46 @@ app.get("/admin/participants/export", isAuthenticated, async (req, res) => {
     }
 });
 
+// user confirmation message
+app.get('/admin/user-confirmation', isAuthenticated, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `
+            SELECT setting_value
+            FROM admin_settings
+            WHERE setting_key = 'user_confirmation_registration'
+            `
+        );
+        res.render(
+            'user_confirmation',
+            {
+                instruction: result.rows[0]?.setting_value || ''
+            }
+        );
+    } catch(err){
+        console.error(err);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+app.post('/admin/user-confirmation', isAuthenticated, async (req, res) => {
+    try {
+        const { instruction } = req.body;
+        await pool.query(
+            `
+            UPDATE admin_settings
+            SET setting_value = $1,
+                updated_date = CURRENT_TIMESTAMP
+            WHERE setting_key = 'user_confirmation_registration'
+            `,
+            [instruction]
+        );
+        res.redirect('/admin/user-confirmation');
+    } catch(err){
+        console.error(err);
+        res.status(500).send("Internal Server Error");
+    }
+});
 
 // Manage admins
 app.get('/admin/manage-admins', isAuthenticated, async (req, res) => {

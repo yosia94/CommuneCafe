@@ -20,6 +20,7 @@
 
 
     <form id="registrationForm" action="/register" method="post" novalidate>
+	<input type="hidden" name="user_confirmation" id="user_confirmation">
       <label>Name <span class="required">*</span></label>
       <input type="text" name="name" required>
       <div class="error-message" id="error-name"></div>
@@ -55,8 +56,26 @@
       <input type="time" name="eta">
 
       <button type="submit">Register</button>
+	  
     </form>
+	<!-- Confirmation Popup -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <h3>Confirm Registration</h3>
 
+            <p><%= confirmationInstruction %></p>
+            <label>Your Confirmation</label>
+            <textarea 
+                id="confirmationText"
+                placeholder="Type your confirmation here..."
+                rows="4"
+            ></textarea>
+            <div class="modal-buttons">
+                <button type="button" id="cancelConfirmation">Cancel</button>
+                <button type="button" id="submitConfirmation">Yes, Register</button>
+            </div>
+        </div>
+    </div>
     <a href="/" class="back-button">⬅ Back to Main Page</a>
   </div>
 
@@ -94,12 +113,28 @@
       }
 
       if (valid) {
-        const confirmed = confirm("Apakah anda yakin data sudah benar?");
-        if (confirmed) {
-          form.submit();
-        }
-      }
+		document.getElementById('confirmationModal').style.display = 'flex';
+	}
     });
+	
+const modal = document.getElementById('confirmationModal');
+const cancelConfirmation = document.getElementById('cancelConfirmation');
+const submitConfirmation = document.getElementById('submitConfirmation');
+const confirmationText = document.getElementById('confirmationText');
+const userConfirmation = document.getElementById('user_confirmation');
+cancelConfirmation.addEventListener('click', function(){
+    modal.style.display = 'none';
+});
+submitConfirmation.addEventListener('click', function(){
+    if (!confirmationText.value.trim()) {
+        alert("Please fill your confirmation");
+        return;
+    }
+    userConfirmation.value = confirmationText.value;
+    modal.style.display = 'none';
+    form.submit();
+});
+
   </script>
 </body>
 </html>
