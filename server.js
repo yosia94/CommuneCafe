@@ -12,10 +12,11 @@ const app = express();
 
 // -------------------- MIDDLEWARE --------------------
 
-app.set('view engine', 'ejs');
-
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
+app.set('view engine', 'ejs');
+app.use(bodyParser.urlencoded({ extended: true }));
+
+
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'commune-cafe-secret-key',
@@ -83,7 +84,8 @@ app.post('/register', async (req, res) => {
     source,
     counselling,
     instagram,
-    eta
+    eta,
+	user_confirmation
   } = req.body;
 
 
@@ -106,10 +108,11 @@ app.post('/register', async (req, res) => {
         counselling_session,
         participants_ig,
         time_arrival,
-        created_date
+        created_date,
+		user_confirmation
       )
       VALUES
-      ($1,$2,$3,$4,$5,$6,$7,$8,NOW())
+      ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),$9)
       `,
       [
         id,
@@ -119,7 +122,8 @@ app.post('/register', async (req, res) => {
         source,
         counselling,
         instagram,
-        eta
+        eta,
+		user_confirmation
       ]
     );
 
@@ -171,8 +175,8 @@ app.post('/register', async (req, res) => {
     res.render('thankyou', { name });
   } catch (err) {
     console.error("Registration error:", err);
-    res.send("❌ Error saving registration");
-  }
+    res.send(err.message);
+	}
 });
 
 // -------------------- CRON REMINDER EMAIL --------------------
@@ -265,7 +269,6 @@ cron.schedule(
 
 const { Resend } = require('resend');
 const resend = new Resend(process.env.RESEND_API_KEY);
-
 async function sendEmail(to, subject, text) {
   console.log("📨 Preparing email to:", to);
   try {
@@ -274,8 +277,56 @@ async function sendEmail(to, subject, text) {
       to: [to],
       subject: subject,
       html: `
-        <div>
-          ${(text || '').replace(/\n/g, '<br>')}
+        <div style="
+          font-family: Arial, Helvetica, sans-serif;
+          background:#f5f5f5;
+          padding:30px;
+        ">
+          <div style="
+            max-width:600px;
+            margin:auto;
+            background:white;
+            padding:30px;
+            border-radius:12px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.08);
+          ">
+            <!-- Logo -->
+            <div style="
+              text-align:center;
+              margin-bottom:25px;
+            ">
+              <img
+                src="https://communecafe.my.id/images/logoemail.png"
+                alt="Commune Cafe"
+                style="
+                  width:180px;
+                  max-width:100%;
+                "
+              >
+            </div>
+            <!-- Email Content -->
+            <div style="
+              font-size:16px;
+              line-height:1.6;
+              color:#333;
+            ">
+              ${(text || '').replace(/\n/g, '<br>')}
+            </div>
+            <!-- Footer -->
+            <hr style="
+              margin:30px 0;
+              border:none;
+              border-top:1px solid #ddd;
+            ">
+            <div style="
+              text-align:center;
+              font-size:13px;
+              color:#777;
+            ">
+              Commune Cafe<br>
+              See you at the event ☕
+            </div>
+          </div>
         </div>
       `
     });

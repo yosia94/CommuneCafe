@@ -76,6 +76,14 @@
             </div>
         </div>
     </div>
+	
+	<!-- Loading Screen 🔃 -->
+<div id="loadingScreen" class="loading-screen">
+    <div class="loading-box">
+        <div class="spinner"></div>
+        <p>Brewing, please wait...</p>
+    </div>
+</div>
     <a href="/" class="back-button">⬅ Back to Main Page</a>
   </div>
 
@@ -117,14 +125,15 @@
 	}
     });
 	
-const modal = document.getElementById('confirmationModal');
-const cancelConfirmation = document.getElementById('cancelConfirmation');
-const submitConfirmation = document.getElementById('submitConfirmation');
-const confirmationText = document.getElementById('confirmationText');
-const userConfirmation = document.getElementById('user_confirmation');
-cancelConfirmation.addEventListener('click', function(){
+	const modal = document.getElementById('confirmationModal');
+	const cancelConfirmation = document.getElementById('cancelConfirmation');
+	const submitConfirmation = document.getElementById('submitConfirmation');
+	const confirmationText = document.getElementById('confirmationText');
+	const userConfirmation = document.getElementById('user_confirmation');
+	cancelConfirmation.addEventListener('click', function(){
     modal.style.display = 'none';
-});
+	});
+
 submitConfirmation.addEventListener('click', function(){
     if (!confirmationText.value.trim()) {
         alert("Please fill your confirmation");
@@ -132,6 +141,8 @@ submitConfirmation.addEventListener('click', function(){
     }
     userConfirmation.value = confirmationText.value;
     modal.style.display = 'none';
+    document.getElementById('loadingScreen').style.display = 'flex';
+	submitConfirmation.disabled = true;
     form.submit();
 });
 
