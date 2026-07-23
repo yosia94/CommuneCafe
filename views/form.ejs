@@ -8,6 +8,34 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+
+	<!-- Loading Screen 🔃 -->
+	<div id="loadingScreen" class="loading-screen">
+    <div class="loading-box">
+        <div class="spinner"></div>
+        <p>Brewing, please wait...</p>
+    </div>
+	</div>
+	
+	<!-- Confirmation Popup -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <h3>Confirm Registration</h3>
+
+            <p><%= confirmationInstruction %></p>
+            <label>Your Confirmation</label>
+            <textarea 
+                id="confirmationText"
+                placeholder="Type your confirmation here..."
+                rows="4"
+            ></textarea>
+            <div class="modal-buttons">
+                <button type="button" id="cancelConfirmation">Back</button>
+                <button type="button" id="submitConfirmation">Yes, Register</button>
+            </div>
+        </div>
+    </div>
+	
   <div class="form-box">
     <h2>Commune Cafe Registration</h2>
 
@@ -58,35 +86,10 @@
       <button type="submit">Register</button>
 	  
     </form>
-	<!-- Confirmation Popup -->
-    <div id="confirmationModal" class="modal">
-        <div class="modal-content">
-            <h3>Confirm Registration</h3>
-
-            <p><%= confirmationInstruction %></p>
-            <label>Your Confirmation</label>
-            <textarea 
-                id="confirmationText"
-                placeholder="Type your confirmation here..."
-                rows="4"
-            ></textarea>
-            <div class="modal-buttons">
-                <button type="button" id="cancelConfirmation">Cancel</button>
-                <button type="button" id="submitConfirmation">Yes, Register</button>
-            </div>
-        </div>
-    </div>
 	
-	<!-- Loading Screen 🔃 -->
-<div id="loadingScreen" class="loading-screen">
-    <div class="loading-box">
-        <div class="spinner"></div>
-        <p>Brewing, please wait...</p>
-    </div>
-</div>
-    <a href="/" class="back-button">⬅ Back to Main Page</a>
-  </div>
-
+	<a href="/" class="back-button">⬅ Back to Main Page</a>
+	</div>
+	
   <!-- ✅ Validation + Confirm popup script -->
   <script>
     const form = document.getElementById('registrationForm');
@@ -134,16 +137,17 @@
     modal.style.display = 'none';
 	});
 
-submitConfirmation.addEventListener('click', function(){
+	submitConfirmation.addEventListener('click', function(){
     if (!confirmationText.value.trim()) {
         alert("Please fill your confirmation");
         return;
     }
     userConfirmation.value = confirmationText.value;
     modal.style.display = 'none';
-    document.getElementById('loadingScreen').style.display = 'flex';
-	submitConfirmation.disabled = true;
-    form.submit();
+    submitConfirmation.disabled = true;
+	document.body.style.overflow = 'hidden';
+	document.getElementById('loadingScreen').style.display = 'flex';
+	form.submit();
 });
 
   </script>
