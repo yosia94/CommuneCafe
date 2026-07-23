@@ -23,12 +23,11 @@
             <h3>Confirm Registration</h3>
 
             <p><%= confirmationInstruction %></p>
-            <label>Your Confirmation</label>
-            <textarea 
-                id="confirmationText"
-                placeholder="Type your confirmation here..."
-                rows="4"
-            ></textarea>
+            <label>Select Your Attendance Date</label>
+			<input 
+				type="date" 
+				id="confirmationDate"
+			>
             <div class="modal-buttons">
                 <button type="button" id="cancelConfirmation">Back</button>
                 <button type="button" id="submitConfirmation">Yes, Register</button>
@@ -131,24 +130,33 @@
 	const modal = document.getElementById('confirmationModal');
 	const cancelConfirmation = document.getElementById('cancelConfirmation');
 	const submitConfirmation = document.getElementById('submitConfirmation');
-	const confirmationText = document.getElementById('confirmationText');
+	const confirmationText = document.getElementById('confirmationDate');
 	const userConfirmation = document.getElementById('user_confirmation');
 	cancelConfirmation.addEventListener('click', function(){
     modal.style.display = 'none';
 	});
 
 	submitConfirmation.addEventListener('click', function(){
-    if (!confirmationText.value.trim()) {
-        alert("Please fill your confirmation");
-        return;
+    if (!confirmationDate.value) {
+		alert("Please select your attendance date");
+		return;
+	}
+		const selectedDate = new Date(confirmationDate.value);
+		const formattedDate = selectedDate.toLocaleDateString(
+		'en-GB',
+    {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
     }
-    userConfirmation.value = confirmationText.value;
-    modal.style.display = 'none';
-    submitConfirmation.disabled = true;
-	document.body.style.overflow = 'hidden';
-	document.getElementById('loadingScreen').style.display = 'flex';
-	form.submit();
-});
+	);
+		userConfirmation.value = formattedDate;
+		modal.style.display = 'none';
+		submitConfirmation.disabled = true;
+		document.body.style.overflow = 'hidden';
+		document.getElementById('loadingScreen').style.display = 'flex';
+		form.submit();
+	});
 
   </script>
 </body>
