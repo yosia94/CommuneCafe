@@ -268,32 +268,29 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendEmail(to, subject, text) {
   console.log("📨 Preparing email to:", to);
-
   try {
     const emailResult = await resend.emails.send({
-      from: 'Commune Cafe <onboarding@resend.dev>',
+      from: 'Commune Cafe <hello@communecafe.my.id>',
       to: [to],
       subject: subject,
       html: `
         <div>
-          ${text.replace(/\n/g, '<br>')}
+          ${(text || '').replace(/\n/g, '<br>')}
         </div>
       `
     });
-    console.log("📧 Email sent:", emailResult);
-
+    if (emailResult.error) {
+      console.log("❌ Resend error:", emailResult.error);
+    } else {
+      console.log(
+        "📧 Email sent ID:",
+        emailResult.data.id
+      );
+    }
   } catch (error) {
     console.log("❌ Email error:", error);
     throw error;
   }
-}
-
-// Authentication middleware
-function isAuthenticated(req, res, next) {
-  if (req.session.admin) {
-    return next();
-  }
-  res.redirect('/admin');
 }
 
 // -------------------- ADMIN CMS --------------------
@@ -334,6 +331,16 @@ app.post('/admin/login', async (req, res) => {
     res.send("❌ Error checking admin");
   }
 });
+
+function isAuthenticated(req, res, next) {
+
+    if (req.session && req.session.admin) {
+        next();
+    } else {
+        res.redirect('/admin/login');
+    }
+
+}
 
 // Dashboard
 app.get('/admin/dashboard', isAuthenticated, (req, res) => {
@@ -500,6 +507,103 @@ app.post('/admin/email-templates', isAuthenticated, async (req, res) => {
     res.send("❌ Error saving email template");
   }
 });
+
+// List Participants for Admin
+app.get("/admin/participants", isAuthenticated, async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT
+                participants_name,
+                participants_email,
+                participants_wa,
+                participants_ig,
+                source,
+                counselling_session,
+                time_arrival,
+                created_date
+            FROM registrations
+            ORDER BY created_date DESC
+        `);
+
+        res.render("participants", {
+            participants: result.rows,
+            total: result.rowCount
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+// Export Participants to Excel
+app.get("/admin/participants/export", isAuthenticated, async (req, res) => {
+    try {
+
+        const result = await pool.query(`
+            SELECT
+                participants_name AS "Name",
+                participants_email AS "Email",
+                participants_wa AS "WhatsApp",
+                participants_ig AS "Instagram",
+                source AS "Source",
+                counselling_session AS "Counselling Session",
+                time_arrival AS "Arrival Time",
+                created_date AS "Registered Date"
+            FROM registrations
+            ORDER BY created_date DESC
+        `);
+
+        const ExcelJS = require("exceljs");
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Participants");
+
+        // Add columns
+        worksheet.columns = [
+            { header: "Name", key: "Name", width: 25 },
+            { header: "Email", key: "Email", width: 30 },
+            { header: "WhatsApp", key: "WhatsApp", width: 20 },
+            { header: "Instagram", key: "Instagram", width: 20 },
+            { header: "Source", key: "Source", width: 20 },
+            { header: "Counselling Session", key: "Counselling Session", width: 25 },
+            { header: "Arrival Time", key: "Arrival Time", width: 20 },
+            { header: "Registered Date", key: "Registered Date", width: 25 }
+        ];
+
+        // Insert data
+        result.rows.forEach(participant => {
+            worksheet.addRow(participant);
+        });
+
+        // Make header bold
+        worksheet.getRow(1).font = {
+            bold: true
+        };
+
+        // File name
+        const filename = `participants_${Date.now()}.xlsx`;
+
+        // Download response
+        res.setHeader(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename=${filename}`
+        );
+
+        await workbook.xlsx.write(res);
+        res.end();
+
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Failed to export Excel");
+    }
+});
+
 
 // Manage admins
 app.get('/admin/manage-admins', isAuthenticated, async (req, res) => {

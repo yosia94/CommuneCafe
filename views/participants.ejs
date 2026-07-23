@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<a href="/admin/dashboard" class="back-button">⬅ Back to Dashboard</a>
+    <title>Participants</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.08);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .left-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .badge {
+            background: #0d6efd;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type=text] {
+            padding: 10px;
+            width: 250px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        .btn {
+            background: #198754;
+            color: white;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #157347;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        thead {
+            background: #343a40;
+            color: white;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: gray;
+        }
+
+        @media (max-width:900px){
+
+            .top-bar{
+                flex-direction:column;
+                align-items:flex-start;
+            }
+
+            .actions{
+                width:100%;
+                flex-wrap:wrap;
+            }
+
+            input[type=text]{
+                width:100%;
+            }
+
+            table{
+                display:block;
+                overflow-x:auto;
+            }
+
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Participants</h2>
+    <div class="top-bar">
+        <div class="left-info">
+            <div class="badge">
+                Total Registration :
+                <%= total %>
+            </div>
+        </div>
+        <div class="actions">
+            <!-- Search UI (will be functional later) -->
+            <input
+                type="text"
+                placeholder="Search name, email or WhatsApp">
+            <a href="/admin/participants/export" class="btn">
+                Download Excel
+            </a>
+        </div>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>No</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>WhatsApp</th>
+            <th>Instagram</th>
+            <th>Source</th>
+            <th>Counselling</th>
+            <th>ETA</th>
+            <th>Registered</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% if (participants.length === 0) { %>
+
+            <tr>
+                <td colspan="9" class="empty">
+                    No participants found.
+                </td>
+            </tr>
+
+        <% } %>
+
+        <% participants.forEach((item,index)=>{ %>
+
+            <tr>
+
+                <td><%= index + 1 %></td>
+
+                <td><%= item.participants_name %></td>
+
+                <td><%= item.participants_email %></td>
+
+                <td><%= item.participants_wa %></td>
+
+                <td><%= item.participants_ig || "-" %></td>
+
+                <td><%= item.source %></td>
+
+                <td>
+                    <%= item.counselling_session ? "Yes" : "No" %>
+                </td>
+
+                <td><%= item.time_arrival %></td>
+
+                <td>
+                    <%= new Date(item.created_date).toLocaleString() %>
+                </td>
+
+            </tr>
+
+        <% }) %>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</body>
+</html>
