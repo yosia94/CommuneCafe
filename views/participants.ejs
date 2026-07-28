@@ -62,7 +62,7 @@
                 <td><%= item.participants_wa %></td>
                 <td><%= item.participants_ig || "-" %></td>
                 <td><%= item.source %></td>
-                <td><%= item.counselling_session ? "Yes" : "No" %></td>
+                <td><%= item.counselling_session %></td>
 			<td class="age-cell">
   <span id="age-display-<%= item.id %>" class="age-display"><%= item.age %></span>
   <button type="button" class="edit-btn" onclick="toggleEdit('<%= item.id %>')">✏️</button>
