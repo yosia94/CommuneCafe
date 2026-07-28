@@ -167,6 +167,46 @@ textarea {
     margin-top: 10px;
 }
 
+.age-cell {
+  white-space: nowrap;       /* keep everything on one line */
+}
+
+.age-display {
+  display: inline-block;
+  margin-right: 6px;         /* small gap before pencil */
+}
+
+.edit-btn {
+  display: inline-block;     /* force inline */
+  background: none;          /* remove button box */
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-size: 10px;           /* smaller pencil */
+  line-height: 1;
+  vertical-align: middle;    /* align with text */
+}
+
+.edit-btn:hover {
+  color: #007bff;         /* optional hover color */
+}
+
+.edit-input {
+  display: inline-block;   /* keep input inline */
+  margin-bottom: 4px;      /* small gap before buttons */
+}
+
+.edit-actions {
+  display: block;          /* force buttons below */
+  margin-top: 4px;
+}
+
+.edit-actions button {
+  margin-right: 6px;       /* spacing between Save/Cancel */
+}
+
+
 /* ===========================
    Mobile Responsive
 =========================== */

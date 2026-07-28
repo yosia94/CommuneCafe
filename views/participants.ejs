@@ -63,7 +63,30 @@
                 <td><%= item.participants_ig || "-" %></td>
                 <td><%= item.source %></td>
                 <td><%= item.counselling_session ? "Yes" : "No" %></td>
-				<td><%= item.age %></td>
+			<td class="age-cell">
+  <span id="age-display-<%= item.id %>" class="age-display"><%= item.age %></span>
+  <button type="button" class="edit-btn" onclick="toggleEdit('<%= item.id %>')">✏️</button>
+
+  <form id="edit-form-<%= item.id %>" 
+      action="/admin/participants/update-age/<%= item.id %>" 
+      method="post" 
+      style="display:none; margin-top:5px;">
+  
+  <!-- input stays inline -->
+  <div class="edit-input">
+    <input type="text" name="age" value="<%= item.age %>" style="width:50px;">
+  </div>
+
+  <!-- buttons stacked below -->
+  <div class="edit-actions">
+    <button type="submit">Save</button>
+    <button type="button" onclick="cancelEdit('<%= item.id %>')">Cancel</button>
+  </div>
+</form>
+
+</td>
+
+
                 <td><%= item.time_arrival %></td>
                 <td><%= new Date(item.created_date).toLocaleString() %></td>
             </tr>
@@ -74,5 +97,18 @@
     <br>
     <a href="/" class="back-button">⬅ Back to Main Page</a>
 </div>
+<script>
+function toggleEdit(id) {
+  document.getElementById('age-display-' + id).style.display = 'none';
+  document.querySelector('#age-display-' + id + ' + .edit-btn').style.display = 'none';
+  document.getElementById('edit-form-' + id).style.display = 'block'; // block makes it drop below
+}
+
+function cancelEdit(id) {
+  document.getElementById('age-display-' + id).style.display = 'inline';
+  document.querySelector('#age-display-' + id + ' + .edit-btn').style.display = 'inline';
+  document.getElementById('edit-form-' + id).style.display = 'none';
+}
+</script>
 </body>
 </html>

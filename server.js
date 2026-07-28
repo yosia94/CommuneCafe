@@ -567,6 +567,7 @@ app.get("/admin/participants", isAuthenticated, async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT
+				id,
                 participants_name,
                 participants_email,
                 participants_wa,
@@ -591,12 +592,31 @@ app.get("/admin/participants", isAuthenticated, async (req, res) => {
     }
 });
 
+// Function edit age(usia) in list participants
+app.post('/admin/participants/update-age/:id', async (req, res) => {
+  const id = req.params.id;
+  const { age } = req.body;
+
+  try {
+    await pool.query(
+      'UPDATE registrations SET age = $1 WHERE id = $2',
+      [age, id]
+    );
+    res.redirect('/admin/participants'); // reload the list
+  } catch (err) {
+    console.error("❌ Error updating age:", err);
+    res.status(500).send("Error updating age");
+  }
+});
+
+
 // Export Participants to Excel
 app.get("/admin/participants/export", isAuthenticated, async (req, res) => {
     try {
 
         const result = await pool.query(`
             SELECT
+				id,
                 participants_name AS "Name",
                 participants_email AS "Email",
                 participants_wa AS "WhatsApp",
@@ -622,7 +642,7 @@ app.get("/admin/participants/export", isAuthenticated, async (req, res) => {
             { header: "Instagram", key: "Instagram", width: 20 },
             { header: "Source", key: "Source", width: 20 },
             { header: "Counselling Session", key: "Counselling Session", width: 25 },
-            { header: "Age", key: "Age", width: 20 },
+            { header: "Age", key: "Age", width: 28 },
             { header: "Arrival Time", key: "Arrival Time", width: 20 },
             { header: "Registered Date", key: "Registered Date", width: 25 }
         ];
