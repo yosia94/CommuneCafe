@@ -85,7 +85,8 @@ app.post('/register', async (req, res) => {
     counselling,
     instagram,
     eta,
-	user_confirmation
+	user_confirmation,
+	age
   } = req.body;
 
 
@@ -109,10 +110,11 @@ app.post('/register', async (req, res) => {
         participants_ig,
         time_arrival,
         created_date,
-		user_confirmation
+		user_confirmation,
+		age
       )
       VALUES
-      ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),$9)
+      ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),$9,$10)
       `,
       [
         id,
@@ -123,7 +125,8 @@ app.post('/register', async (req, res) => {
         counselling,
         instagram,
         eta,
-		user_confirmation
+		user_confirmation,
+		age
       ]
     );
 
@@ -571,6 +574,7 @@ app.get("/admin/participants", isAuthenticated, async (req, res) => {
                 source,
                 counselling_session,
                 time_arrival,
+				age,
                 created_date
             FROM registrations
             ORDER BY created_date DESC
@@ -600,6 +604,7 @@ app.get("/admin/participants/export", isAuthenticated, async (req, res) => {
                 source AS "Source",
                 counselling_session AS "Counselling Session",
                 time_arrival AS "Arrival Time",
+				age as "Age",
                 created_date AS "Registered Date"
             FROM registrations
             ORDER BY created_date DESC
@@ -617,6 +622,7 @@ app.get("/admin/participants/export", isAuthenticated, async (req, res) => {
             { header: "Instagram", key: "Instagram", width: 20 },
             { header: "Source", key: "Source", width: 20 },
             { header: "Counselling Session", key: "Counselling Session", width: 25 },
+            { header: "Age", key: "Age", width: 20 },
             { header: "Arrival Time", key: "Arrival Time", width: 20 },
             { header: "Registered Date", key: "Registered Date", width: 25 }
         ];

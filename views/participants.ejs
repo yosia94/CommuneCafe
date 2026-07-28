@@ -35,6 +35,7 @@
                 <th>Instagram</th>
                 <th>Source</th>
                 <th>Counselling</th>
+                <th>Usia</th>
                 <th>ETA</th>
                 <th>Registered</th>
             </tr>
@@ -62,6 +63,7 @@
                 <td><%= item.participants_ig || "-" %></td>
                 <td><%= item.source %></td>
                 <td><%= item.counselling_session ? "Yes" : "No" %></td>
+				<td><%= item.age %></td>
                 <td><%= item.time_arrival %></td>
                 <td><%= new Date(item.created_date).toLocaleString() %></td>
             </tr>

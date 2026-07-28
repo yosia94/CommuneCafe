@@ -78,6 +78,9 @@
 
       <label>Instagram:</label>
       <input type="text" name="instagram">
+	  
+	  <label>Berapa usia anda ? <span class="required">*</span></label>
+      <input type="text" name="age">
 
       <label>Estimate Time Arrival:</label>
       <input type="time" name="eta">
@@ -121,10 +124,13 @@
         document.getElementById('error-counselling').textContent = 'Please select counselling option';
         valid = false;
       }
-
+	  if (!form.age.value) {
+        document.getElementById('error-age').textContent = 'Please fill age';
+        valid = false;
+      }
       if (valid) {
 		document.getElementById('confirmationModal').style.display = 'flex';
-	}
+	  }
     });
 	
 	const modal = document.getElementById('confirmationModal');
