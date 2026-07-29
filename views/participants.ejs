@@ -18,7 +18,7 @@
             </div>
         </div>
         <div class="actions">
-            <input type="text" placeholder="Search name, email or WhatsApp">
+            <input type="text" id="searchBox" placeholder="Search name, email or WhatsApp">
             <a href="/admin/participants/export" class="btn">
                 Download Excel
             </a>
@@ -110,5 +110,21 @@ function cancelEdit(id) {
   document.getElementById('edit-form-' + id).style.display = 'none';
 }
 </script>
+<script>
+document.getElementById('searchBox').addEventListener('keyup', function() {
+  const query = this.value.toLowerCase();
+  const rows = document.querySelectorAll('.participants-table tbody tr');
+
+  rows.forEach(row => {
+    const text = row.innerText.toLowerCase();
+    if (text.includes(query)) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+});
+</script>
+
 </body>
 </html>
