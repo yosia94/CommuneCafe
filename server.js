@@ -576,7 +576,8 @@ app.get("/admin/participants", isAuthenticated, async (req, res) => {
                 counselling_session,
                 time_arrival,
 				age,
-                created_date
+                created_date,
+				user_confirmation
             FROM registrations
             ORDER BY created_date DESC
         `);
@@ -625,7 +626,8 @@ app.get("/admin/participants/export", isAuthenticated, async (req, res) => {
                 counselling_session AS "Counselling Session",
                 time_arrival AS "Arrival Time",
 				age as "Age",
-                created_date AS "Registered Date"
+                created_date AS "Registered Date",
+				user_confirmation AS "Event Date"
             FROM registrations
             ORDER BY created_date DESC
         `);
@@ -644,7 +646,8 @@ app.get("/admin/participants/export", isAuthenticated, async (req, res) => {
             { header: "Counselling Session", key: "Counselling Session", width: 25 },
             { header: "Age", key: "Age", width: 28 },
             { header: "Arrival Time", key: "Arrival Time", width: 20 },
-            { header: "Registered Date", key: "Registered Date", width: 25 }
+            { header: "Registered Date", key: "Registered Date", width: 25 },
+			{ header: "Event Date", key: "Event Date", width: 25 }
         ];
 
         // Insert data

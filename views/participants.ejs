@@ -38,6 +38,7 @@
                 <th>Usia</th>
                 <th>ETA</th>
                 <th>Registered</th>
+				<th>Event Date</th>
             </tr>
         </thead>
 
@@ -89,6 +90,7 @@
 
                 <td><%= item.time_arrival %></td>
                 <td><%= new Date(item.created_date).toLocaleString() %></td>
+				<td><%= item.user_confirmation %></td>
             </tr>
         <% }) %>
         </tbody>
