@@ -23,7 +23,8 @@ function resolveKeyFilePath() {
   }
   const candidatePaths = [
     path.join(__dirname, 'google-service-account.json'),
-    path.join(__dirname, 'google-service-account.json.json')
+    path.join(__dirname, 'google-service-account.json.json'),
+    '/etc/secrets/google-service-account.json'
   ];
   for (const p of candidatePaths) {
     if (fs.existsSync(p)) return p;
@@ -42,7 +43,20 @@ function getAuth() {
     throw new Error("GOOGLE_SHEET_ID is not configured in .env");
   }
 
-  // 1. Check if JSON key file exists
+  // 1. Check if raw JSON string is provided in environment variables
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+    try {
+      const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+      return new google.auth.GoogleAuth({
+        credentials,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+      });
+    } catch (e) {
+      console.error("Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON:", e.message);
+    }
+  }
+
+  // 2. Check if JSON key file exists
   const keyPath = resolveKeyFilePath();
   if (keyPath) {
     return new google.auth.GoogleAuth({
@@ -51,7 +65,7 @@ function getAuth() {
     });
   }
 
-  // 2. Check if credentials are directly in .env
+  // 3. Check if credentials are directly in .env
   if (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) {
     const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
     return new google.auth.JWT(
@@ -63,15 +77,16 @@ function getAuth() {
   }
 
   throw new Error(
-    "No Google Service Account credentials found. Please place google-service-account.json in the project root or set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY in .env"
+    "No Google Service Account credentials found. Please set GOOGLE_SERVICE_ACCOUNT_JSON or place google-service-account.json in the project root."
   );
 }
 
 function isConfigured() {
   const hasSheetId = !!process.env.GOOGLE_SHEET_ID;
   const hasFile = !!resolveKeyFilePath();
+  const hasEnvJson = !!process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   const hasEnvCredentials = !!(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY);
-  return hasSheetId && (hasFile || hasEnvCredentials);
+  return hasSheetId && (hasFile || hasEnvJson || hasEnvCredentials);
 }
 
 function getGoogleSheetUrl() {
