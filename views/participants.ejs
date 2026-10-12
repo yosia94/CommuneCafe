@@ -11,6 +11,23 @@
 <body>
 <div class="form-box participants-box">
     <h2>Participants</h2>
+
+    <% if (syncStatus === 'success') { %>
+        <div class="alert-banner alert-success">
+            ✅ <strong>Success!</strong> All participants have been synced to Google Sheet.
+        </div>
+    <% } else if (syncStatus === 'error') { %>
+        <div class="alert-banner alert-error">
+            ❌ <strong>Sync Error:</strong> <%= syncError || 'Failed to sync with Google Sheet. Please check credentials.' %>
+        </div>
+    <% } %>
+
+    <% if (!isGoogleSheetConfigured) { %>
+        <div class="alert-banner alert-warning">
+            ⚠️ <strong>Google Sheets not configured yet:</strong> Add <code>GOOGLE_SHEET_ID</code> and service account credentials to your <code>.env</code> file.
+        </div>
+    <% } %>
+
     <div class="top-bar">
         <div class="left-info">
             <div class="badge">
@@ -19,11 +36,37 @@
         </div>
         <div class="actions">
             <input type="text" id="searchBox" placeholder="Search name, email or WhatsApp">
-            <a href="/admin/participants/export" class="btn">
-                Download Excel
+
+            <% if (googleSheetUrl) { %>
+                <a href="<%= googleSheetUrl %>" target="_blank" rel="noopener noreferrer" class="btn-sheets">
+                    📊 Open Google Sheet
+                </a>
+            <% } %>
+
+            <form action="/admin/participants/sync-sheet" method="post" style="display:inline; margin:0;" onsubmit="return confirm('Sync all participants to Google Sheet? This will refresh the sheet with current database records.');">
+                <button type="submit" class="btn-sync" <%= !isGoogleSheetConfigured ? 'disabled title="Please configure credentials first"' : '' %>>
+                    🔄 Sync to Sheet
+                </button>
+            </form>
+
+            <a href="/admin/participants/export" class="btn-secondary" title="Download offline Excel copy">
+                📥 Excel Backup
             </a>
         </div>
     </div>
+			<form method="GET" action="/admin/participants">
+			  <label for="user_confirmation">Filter by Confirmation:</label>
+			  <select id="user_confirmation" name="user_confirmation">
+				<option value="">-- All --</option>
+				<% confirmations.forEach(function(c) { %>
+				  <option value="<%= c.user_confirmation %>"
+					<%= selectedConfirmation === c.user_confirmation ? 'selected' : '' %>>
+					<%= c.user_confirmation %>
+				  </option>
+				<% }); %>
+			  </select>
+			  <button type="submit">Filter</button>
+			</form>
 	<div class="table-wrapper">
     <table class="participants-table">
         <thead>
@@ -35,10 +78,12 @@
                 <th>Instagram</th>
                 <th>Source</th>
                 <th>Counselling</th>
+                <th>Community</th>
                 <th>Usia</th>
                 <th>ETA</th>
                 <th>Registered</th>
 				<th>Event Date</th>
+				<th>Join Counts</th>
             </tr>
         </thead>
 
@@ -47,7 +92,7 @@
         <% if (participants.length === 0) { %>
 
             <tr>
-                <td colspan="9" class="empty">
+                <td colspan="13" class="empty">
                     No participants found.
                 </td>
             </tr>
@@ -64,33 +109,35 @@
                 <td><%= item.participants_ig || "-" %></td>
                 <td><%= item.source %></td>
                 <td><%= item.counselling_session %></td>
+                <td><%= item.community || "-" %></td>
 			<td class="age-cell">
-  <span id="age-display-<%= item.id %>" class="age-display"><%= item.age %></span>
-  <button type="button" class="edit-btn" onclick="toggleEdit('<%= item.id %>')">✏️</button>
+				  <span id="age-display-<%= item.id %>" class="age-display"><%= item.age %></span>
+				  <button type="button" class="edit-btn" onclick="toggleEdit('<%= item.id %>')">✏️</button>
 
-  <form id="edit-form-<%= item.id %>" 
-      action="/admin/participants/update-age/<%= item.id %>" 
-      method="post" 
-      style="display:none; margin-top:5px;">
-  
-  <!-- input stays inline -->
-  <div class="edit-input">
-    <input type="text" name="age" value="<%= item.age %>" style="width:50px;">
-  </div>
+				  <form id="edit-form-<%= item.id %>" 
+					  action="/admin/participants/update-age/<%= item.id %>" 
+					  method="post" 
+					  style="display:none; margin-top:5px;">
+				  
+				  <!-- input stays inline -->
+				  <div class="edit-input">
+					<input type="text" name="age" value="<%= item.age %>" style="width:50px;">
+				  </div>
 
-  <!-- buttons stacked below -->
-  <div class="edit-actions">
-    <button type="submit">Save</button>
-    <button type="button" onclick="cancelEdit('<%= item.id %>')">Cancel</button>
-  </div>
-</form>
+				  <!-- buttons stacked below -->
+				  <div class="edit-actions">
+					<button type="submit">Save</button>
+					<button type="button" onclick="cancelEdit('<%= item.id %>')">Cancel</button>
+				  </div>
+				</form>
 
-</td>
+				</td>
 
 
                 <td><%= item.time_arrival %></td>
                 <td><%= new Date(item.created_date).toLocaleString() %></td>
 				<td><%= item.user_confirmation %></td>
+				<td><%= item.join_counts %></td>
             </tr>
         <% }) %>
         </tbody>

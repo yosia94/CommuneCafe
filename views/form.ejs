@@ -67,6 +67,15 @@
         <label><input type="radio" name="source" value="teman"> Teman</label>
       </div>
       <div class="error-message" id="error-source"></div>
+	  
+	  <label>Berapa kali datang ke Commune Cafe? <span class="required">*</span></label>
+      <div class="radio-group">
+        <label><input type="radio" name="join_counts" value="0" required> Belum Pernah</label>
+        <label><input type="radio" name="join_counts" value="1x"> 1x</label>
+        <label><input type="radio" name="join_counts" value="2x"> 2x</label>
+		<label><input type="radio" name="join_counts" value="3x"> 3x lebih</label>
+      </div>
+      <div class="error-message" id="error-join_counts"></div>
 
       <label>Apakah anda tertarik mengikuti sesi Counselling Corner? <span class="required">*</span></label>
       <div class="radio-group">
@@ -74,13 +83,26 @@
         <label><input type="radio" name="counselling" value="tidak"> Tidak</label>
       </div>
       <div class="error-message" id="error-counselling"></div>
-      <p class="note">Jika ya, mohon kontak nomor admin untuk booking sesi</p>
+      <p class="note">Jika ya, mohon kontak nomor admin untuk booking sesi. (Wajib hadir pukul 13.00 - 14.00 bagi yang mendapatkan slot)</p>
 
-      <label>Instagram:</label>
-      <input type="text" name="instagram">
+      <label>Apakah anda tergabung dalam komunitas dibawah ? <span class="required">*</span></label>
+      <div class="radio-group">
+        <label><input type="radio" name="community" value="Devoted/YoPro" required> Devoted/YoPro</label>
+        <label><input type="radio" name="community" value="Zeal"> Zeal</label>
+        <label><input type="radio" name="community" value="Other"> Other</label>
+      </div>
+      <div id="other-community-container" style="display:none; margin-top:8px;">
+        <input type="text" name="community_other" id="community_other" placeholder="Sebutkan komunitas lainnya (opsional)">
+      </div>
+      <div class="error-message" id="error-community"></div>
+
+      <label>Instagram <span class="required">*</span></label>
+      <input type="text" name="instagram" required>
+      <div class="error-message" id="error-instagram"></div>
 	  
 	  <label>Berapa usia anda ? <span class="required">*</span></label>
-      <input type="text" name="age">
+      <input type="text" name="age" required>
+      <div class="error-message" id="error-age"></div>
 
       <label>Estimate Time Arrival:</label>
       <input type="time" name="eta">
@@ -120,17 +142,46 @@
         document.getElementById('error-source').textContent = 'Please select a source';
         valid = false;
       }
+	  if (!form.join_counts.value) {
+        document.getElementById('error-join_counts').textContent = 'Please select 1';
+        valid = false;
+      }
       if (!form.counselling.value) {
         document.getElementById('error-counselling').textContent = 'Please select counselling option';
         valid = false;
       }
-	  if (!form.age.value) {
+      if (!form.community.value) {
+        document.getElementById('error-community').textContent = 'Please select a community option';
+        valid = false;
+      }
+      if (!form.instagram.value.trim()) {
+        document.getElementById('error-instagram').textContent = 'Instagram account is required';
+        valid = false;
+      }
+	  if (!form.age.value.trim()) {
         document.getElementById('error-age').textContent = 'Please fill age';
         valid = false;
       }
       if (valid) {
 		document.getElementById('confirmationModal').style.display = 'flex';
 	  }
+    });
+
+    // Toggle Other Community textbox
+    const communityRadios = document.querySelectorAll('input[name="community"]');
+    const otherCommunityContainer = document.getElementById('other-community-container');
+    const otherCommunityInput = document.getElementById('community_other');
+
+    communityRadios.forEach(radio => {
+      radio.addEventListener('change', function() {
+        if (this.value === 'Other') {
+          otherCommunityContainer.style.display = 'block';
+          if (otherCommunityInput) otherCommunityInput.focus();
+        } else {
+          otherCommunityContainer.style.display = 'none';
+          if (otherCommunityInput) otherCommunityInput.value = '';
+        }
+      });
     });
 	
 	const modal = document.getElementById('confirmationModal');

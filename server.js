@@ -6,6 +6,7 @@ const cron = require('node-cron');
 const { v4: uuidv4 } = require('uuid');
 const { Pool } = require('pg');
 const session = require('express-session');
+const googleSheets = require('./googleSheets');
 
 const app = express();
 
@@ -86,16 +87,21 @@ app.post('/register', async (req, res) => {
     instagram,
     eta,
 	user_confirmation,
-	age
+	age,
+    join_counts,
+    community,
+    community_other
   } = req.body;
 
+  let communityValue = community || '';
+  if (community === 'Other') {
+    const trimmedOther = (community_other || '').trim();
+    communityValue = trimmedOther ? `Other (${trimmedOther})` : 'Other';
+  }
 
   const id = uuidv4();
 
-
   try {
-
-
     // Insert registration
     await pool.query(
       `
@@ -111,10 +117,12 @@ app.post('/register', async (req, res) => {
         time_arrival,
         created_date,
 		user_confirmation,
-		age
+		age,
+		join_counts,
+        community
       )
       VALUES
-      ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),$9,$10)
+      ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),$9,$10,$11,$12)
       `,
       [
         id,
@@ -126,11 +134,29 @@ app.post('/register', async (req, res) => {
         instagram,
         eta,
 		user_confirmation,
-		age
+		age,
+		join_counts,
+        communityValue
       ]
     );
 
-
+    // Append to Google Sheet (async & non-blocking)
+    googleSheets.appendParticipant({
+      name,
+      email,
+      whatsapp,
+      instagram,
+      source,
+      counselling,
+      community: communityValue,
+      age,
+      eta,
+      user_confirmation,
+      join_counts,
+      created_date: new Date()
+    }).catch(sheetErr => {
+      console.warn("⚠️ Failed to append to Google Sheet:", sheetErr.message);
+    });
 
     // Get event settings
     const eventResult = await pool.query(
@@ -564,34 +590,77 @@ app.post('/admin/email-templates', isAuthenticated, async (req, res) => {
 
 // List Participants for Admin
 app.get("/admin/participants", isAuthenticated, async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT
-				id,
-                participants_name,
-                participants_email,
-                participants_wa,
-                participants_ig,
-                source,
-                counselling_session,
-                time_arrival,
-				age,
-                created_date,
-				user_confirmation
-            FROM registrations
-            ORDER BY created_date DESC
-        `);
+  try {
+    const { user_confirmation, sync_status, sync_error } = req.query;
 
-        res.render("participants", {
-            participants: result.rows,
-            total: result.rowCount
-        });
+    let query = `
+      SELECT id, participants_name, participants_email, participants_wa,
+             participants_ig, source, counselling_session, community, time_arrival,
+             age, created_date, user_confirmation, join_counts
+      FROM registrations
+    `;
+    let params = [];
 
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
+    if (user_confirmation) {
+      query += ' WHERE user_confirmation = $1';
+      params.push(user_confirmation);
     }
+
+    query += ' ORDER BY created_date DESC';
+
+    const result = await pool.query(query, params);
+
+    const confirmationsResult = await pool.query(
+      'SELECT DISTINCT user_confirmation FROM registrations ORDER BY user_confirmation'
+    );
+
+    res.render("participants", {
+      participants: result.rows,
+      total: result.rowCount,
+      confirmations: confirmationsResult.rows,
+      selectedConfirmation: user_confirmation || '',
+      googleSheetUrl: googleSheets.getGoogleSheetUrl(),
+      isGoogleSheetConfigured: googleSheets.isConfigured(),
+      syncStatus: sync_status || null,
+      syncError: sync_error || null
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
 });
+
+// Sync Participants to Google Sheet
+app.post("/admin/participants/sync-sheet", isAuthenticated, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        id,
+        participants_name,
+        participants_email,
+        participants_wa,
+        participants_ig,
+        source,
+        counselling_session,
+        community,
+        time_arrival,
+        age,
+        created_date,
+        user_confirmation,
+        join_counts
+      FROM registrations
+      ORDER BY created_date ASC
+    `);
+
+    await googleSheets.syncAllParticipants(result.rows);
+    console.log(`✅ Successfully synced ${result.rowCount} participants to Google Sheet`);
+    res.redirect("/admin/participants?sync_status=success");
+  } catch (err) {
+    console.error("❌ Google Sheets sync error:", err);
+    res.redirect(`/admin/participants?sync_status=error&sync_error=${encodeURIComponent(err.message)}`);
+  }
+});
+
 
 // Function edit age(usia) in list participants
 app.post('/admin/participants/update-age/:id', async (req, res) => {
@@ -624,10 +693,12 @@ app.get("/admin/participants/export", isAuthenticated, async (req, res) => {
                 participants_ig AS "Instagram",
                 source AS "Source",
                 counselling_session AS "Counselling Session",
+                community AS "Community",
                 time_arrival AS "Arrival Time",
 				age as "Age",
-                created_date AS "Registered Date",
-				user_confirmation AS "Event Date"
+                created_date AS "Created Date",
+				user_confirmation AS "Event Date",
+				join_counts AS "Join Counts"
             FROM registrations
             ORDER BY created_date DESC
         `);
@@ -642,12 +713,14 @@ app.get("/admin/participants/export", isAuthenticated, async (req, res) => {
             { header: "Email", key: "Email", width: 30 },
             { header: "WhatsApp", key: "WhatsApp", width: 20 },
             { header: "Instagram", key: "Instagram", width: 20 },
-            { header: "Source", key: "Source", width: 20 },
-            { header: "Counselling Session", key: "Counselling Session", width: 25 },
-            { header: "Age", key: "Age", width: 28 },
+            { header: "Source", key: "Source", width: 17 },
+            { header: "Counselling Session", key: "Counselling Session", width: 22 },
+            { header: "Community", key: "Community", width: 25 },
+            { header: "Age", key: "Age", width: 20 },
             { header: "Arrival Time", key: "Arrival Time", width: 20 },
-            { header: "Registered Date", key: "Registered Date", width: 25 },
-			{ header: "Event Date", key: "Event Date", width: 25 }
+            { header: "Created Date", key: "Created Date", width: 25 },
+			{ header: "Event Date", key: "Event Date", width: 25 },
+			{ header: "Join Counts", key: "Join Counts", width: 20 }
         ];
 
         // Insert data
