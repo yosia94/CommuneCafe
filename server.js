@@ -102,6 +102,24 @@ app.post('/register', async (req, res) => {
   const id = uuidv4();
 
   try {
+    // Calculate join count for this email based on distinct event dates
+    let calculatedJoinCount = '1';
+    if (email && email.trim()) {
+      const countResult = await pool.query(
+        `
+        SELECT COUNT(DISTINCT user_confirmation) as count
+        FROM registrations
+        WHERE participants_email IS NOT NULL 
+          AND TRIM(participants_email) != ''
+          AND LOWER(TRIM(participants_email)) = LOWER(TRIM($1))
+          AND user_confirmation != $2
+        `,
+        [email.trim(), user_confirmation]
+      );
+      const prevCount = parseInt(countResult.rows[0]?.count || '0', 10);
+      calculatedJoinCount = (prevCount + 1).toString();
+    }
+
     // Insert registration
     await pool.query(
       `
@@ -135,7 +153,7 @@ app.post('/register', async (req, res) => {
         eta,
 		user_confirmation,
 		age,
-		join_counts,
+		calculatedJoinCount,
         communityValue
       ]
     );
@@ -152,7 +170,7 @@ app.post('/register', async (req, res) => {
       age,
       eta,
       user_confirmation,
-      join_counts,
+      join_counts: calculatedJoinCount,
       created_date: new Date()
     }).catch(sheetErr => {
       console.warn("⚠️ Failed to append to Google Sheet:", sheetErr.message);
@@ -594,19 +612,31 @@ app.get("/admin/participants", isAuthenticated, async (req, res) => {
     const { user_confirmation, sync_status, sync_error } = req.query;
 
     let query = `
-      SELECT id, participants_name, participants_email, participants_wa,
-             participants_ig, source, counselling_session, community, time_arrival,
-             age, created_date, user_confirmation, join_counts
-      FROM registrations
+      SELECT r.id, r.participants_name, r.participants_email, r.participants_wa,
+             r.participants_ig, r.source, r.counselling_session, r.community, r.time_arrival,
+             r.age, r.created_date, r.user_confirmation,
+             COALESCE(
+               NULLIF(
+                 (
+                   SELECT COUNT(DISTINCT r2.user_confirmation)
+                   FROM registrations r2
+                   WHERE r2.participants_email IS NOT NULL 
+                     AND TRIM(r2.participants_email) != ''
+                     AND LOWER(TRIM(r2.participants_email)) = LOWER(TRIM(r.participants_email))
+                     AND r2.created_date <= r.created_date
+                 ), 0
+               ), 1
+             )::text as join_counts
+      FROM registrations r
     `;
     let params = [];
 
     if (user_confirmation) {
-      query += ' WHERE user_confirmation = $1';
+      query += ' WHERE r.user_confirmation = $1';
       params.push(user_confirmation);
     }
 
-    query += ' ORDER BY created_date DESC';
+    query += ' ORDER BY r.created_date DESC';
 
     const result = await pool.query(query, params);
 
@@ -635,21 +665,32 @@ app.post("/admin/participants/sync-sheet", isAuthenticated, async (req, res) => 
   try {
     const result = await pool.query(`
       SELECT
-        id,
-        participants_name,
-        participants_email,
-        participants_wa,
-        participants_ig,
-        source,
-        counselling_session,
-        community,
-        time_arrival,
-        age,
-        created_date,
-        user_confirmation,
-        join_counts
-      FROM registrations
-      ORDER BY created_date ASC
+        r.id,
+        r.participants_name,
+        r.participants_email,
+        r.participants_wa,
+        r.participants_ig,
+        r.source,
+        r.counselling_session,
+        r.community,
+        r.time_arrival,
+        r.age,
+        r.created_date,
+        r.user_confirmation,
+        COALESCE(
+          NULLIF(
+            (
+              SELECT COUNT(DISTINCT r2.user_confirmation)
+              FROM registrations r2
+              WHERE r2.participants_email IS NOT NULL 
+                AND TRIM(r2.participants_email) != ''
+                AND LOWER(TRIM(r2.participants_email)) = LOWER(TRIM(r.participants_email))
+                AND r2.created_date <= r.created_date
+            ), 0
+          ), 1
+        )::text as join_counts
+      FROM registrations r
+      ORDER BY r.created_date ASC
     `);
 
     await googleSheets.syncAllParticipants(result.rows);
@@ -686,21 +727,32 @@ app.get("/admin/participants/export", isAuthenticated, async (req, res) => {
 
         const result = await pool.query(`
             SELECT
-				id,
-                participants_name AS "Name",
-                participants_email AS "Email",
-                participants_wa AS "WhatsApp",
-                participants_ig AS "Instagram",
-                source AS "Source",
-                counselling_session AS "Counselling Session",
-                community AS "Community",
-                time_arrival AS "Arrival Time",
-				age as "Age",
-                created_date AS "Created Date",
-				user_confirmation AS "Event Date",
-				join_counts AS "Join Counts"
-            FROM registrations
-            ORDER BY created_date DESC
+				r.id,
+                r.participants_name AS "Name",
+                r.participants_email AS "Email",
+                r.participants_wa AS "WhatsApp",
+                r.participants_ig AS "Instagram",
+                r.source AS "Source",
+                r.counselling_session AS "Counselling Session",
+                r.community AS "Community",
+                r.time_arrival AS "Arrival Time",
+				r.age as "Age",
+                r.created_date AS "Created Date",
+				r.user_confirmation AS "Event Date",
+				COALESCE(
+                  NULLIF(
+                    (
+                      SELECT COUNT(DISTINCT r2.user_confirmation)
+                      FROM registrations r2
+                      WHERE r2.participants_email IS NOT NULL
+                        AND TRIM(r2.participants_email) != ''
+                        AND LOWER(TRIM(r2.participants_email)) = LOWER(TRIM(r.participants_email))
+                        AND r2.created_date <= r.created_date
+                    ), 0
+                  ), 1
+                )::text AS "Join Counts"
+            FROM registrations r
+            ORDER BY r.created_date DESC
         `);
 
         const ExcelJS = require("exceljs");
